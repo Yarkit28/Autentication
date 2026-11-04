@@ -1,14 +1,26 @@
 export const users = new Map();
 let nextId = 1;
 
-export const createUser = ({ email, passwordHash }) => {
-  if ([...users.values()].some(u => u.email === email)) {
+export const createUser = ({ name, passwordHash, email }) => {
+  if ([...users.values()].some(u => u.name === name)) {
+    throw new Error('NAME_EXISTS');
+  }
+  if (email && [...users.values()].some(u => u.email === email)) {
     throw new Error('EMAIL_EXISTS');
   }
-  const user = { id: nextId++, email, passwordHash, createdAt: new Date() };
+  const user = {
+    id: nextId++,
+    name,
+    email: email || null,
+    passwordHash,
+    createdAt: new Date(),
+  };
   users.set(user.id, user);
   return user;
 };
+
+export const findUserByName = (name) =>
+  [...users.values()].find(u => u.name === name) || null;
 
 export const findUserByEmail = (email) =>
   [...users.values()].find(u => u.email === email) || null;
@@ -24,6 +36,3 @@ export const updateUser = (id, data) => {
 };
 
 export const deleteUser = (id) => users.delete(Number(id));
-
-export const listUsers = () =>
-  [...users.values()].map(({ passwordHash, ...u }) => u);

@@ -8,9 +8,17 @@ export const authMiddleware = (req, res, next) => {
   if (!token) return res.status(401).json({ error: 'Token requerido' });
 
   try {
-    req.user = jwt.verify(token, config.jwtSecret);
+    req.user = jwt.verify(token, config.jwtSecret, {
+      algorithms: ['HS256'],   // 🔒 solo HS256
+    });
     next();
-  } catch {
-    return res.status(401).json({ error: 'Token inválido o expirado' });
+  } catch (err) {
+    if (err.name === 'TokenExpiredError') {
+      return res.status(401).json({ error: 'Token expirado', code: 'TOKEN_EXPIRED' });
+    }
+    if (err.name === 'JsonWebTokenError') {
+      return res.status(401).json({ error: 'Token inválido', code: 'TOKEN_INVALID' });
+    }
+    return res.status(401).json({ error: 'No autorizado' });
   }
 };
